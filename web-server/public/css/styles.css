@@ -1,0 +1,16 @@
+html,
+body {
+    font-family: sans-serif;
+}
+
+h1 {
+    color: rebeccapurple;
+}
+
+img {
+    width: 100%;
+    max-width: 250px;
+    height: auto;
+    border-radius: 50%;
+    overflow: hidden;
+}
