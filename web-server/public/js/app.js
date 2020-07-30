@@ -10,16 +10,16 @@ weatherForm.addEventListener('submit', (e) => {
     weatherFormMessageOne.textContent = 'Loading...';
     weatherFormMessageTwo.textContent = '';
 
-    fetch(
-        `http://localhost:3000/weather?address=${weatherFormAddressInput.value}`
-    ).then((response) => {
-        response.json().then((data) => {
-            if (data.error) {
-                weatherFormMessageOne.textContent = data.error;
-            } else {
-                weatherFormMessageOne.textContent = data.location;
-                weatherFormMessageTwo.textContent = data.forecast;
-            }
-        });
-    });
+    fetch(`/weather?address=${weatherFormAddressInput.value}`).then(
+        (response) => {
+            response.json().then((data) => {
+                if (data.error) {
+                    weatherFormMessageOne.textContent = data.error;
+                } else {
+                    weatherFormMessageOne.textContent = data.location;
+                    weatherFormMessageTwo.textContent = data.forecast;
+                }
+            });
+        }
+    );
 });
