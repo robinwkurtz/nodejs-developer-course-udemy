@@ -1,4 +1,5 @@
 const express = require('express');
+const mongoose = require('mongoose');
 
 const Task = require('../models/task');
 
@@ -33,9 +34,9 @@ router.get('/tasks/:id', async (req, res) => {
         res.send(task);
     } catch (e) {
         if (!mongoose.Types.ObjectId.isValid(e.value)) {
-            return res.status(404).send(e);
+            return res.status(500).send(e);
         }
-        res.status(500).send(e);
+        res.status(404).send(e);
     }
 });
 
@@ -49,7 +50,9 @@ router.patch('/tasks/:id', async (req, res) => {
     }
 
     try {
-        const task = await Task.findByIdAndUpdate(req.params.id, req.body, { new: true, runValidators: true });
+        const task = await Task.findById(req.params.id)
+        updates.forEach((update) => task[update] = req.body[update]);
+        await task.save();
 
         if (!task) {
             return res.status(404).send();
