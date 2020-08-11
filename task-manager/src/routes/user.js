@@ -1,14 +1,13 @@
 const express = require('express');
 const mongoose = require('mongoose');
 const multer = require('multer');
+const sharp = require('sharp');
 
 const { auth } = require('../middleware/auth');
 
 const User = require('../models/user');
 
 const router = new express.Router();
-
-const upload = multer({ dest: 'avatars' });
 
 router.post('/users', async (req, res) => {
     const user = new User(req.body);
@@ -61,7 +60,53 @@ router.post('/users/logoutAll', auth, async (req, res) => {
 
 router.get('/users/me', auth, async (req, res) => res.send(req.user));
 
-router.post('/users/me/avatar', upload.single('avatar'), (req, res) => {
+const upload = multer({
+    limits: {
+        fileSize: 1000000,
+    },
+    fileFilter(req, file, cb) {
+        if (!file.originalname.match(/\.(jpg|jpeg|png)$/)) {
+            return cb(new Error('Please upload a JPG/JPEG or PNG image.'));
+        }
+        cb(undefined, true);
+    },
+});
+
+router.post(
+    '/users/me/avatar',
+    auth,
+    upload.single('avatar'),
+    async (req, res) => {
+        const buffer = await sharp(req.file.buffer)
+            .resize(250, 250, { cover: true })
+            .png()
+            .toBuffer();
+        req.user.avatar = buffer;
+        await req.user.save();
+
+        res.send();
+    },
+    (error, req, res, next) => res.status(400).send({ error: error.message })
+);
+
+router.get('/users/:id/avatar', async (req, res) => {
+    try {
+        const user = await User.findById(req.params.id);
+
+        if (!user || !user.avatar) {
+            throw new Error('No user or user avatar found.');
+        }
+
+        res.set('Content-Type', 'image/png');
+        res.send(user.avatar);
+    } catch (e) {
+        res.status(404).send({ error: e.message });
+    }
+});
+
+router.delete('/users/me/avatar', auth, async (req, res) => {
+    req.user.avatar = undefined;
+    await req.user.save();
     res.send();
 });
 
@@ -108,7 +153,6 @@ router.delete('/users/me', auth, async (req, res) => {
         await req.user.remove();
         res.send(req.user);
     } catch (e) {
-        console.log(e);
         res.status(500).send(e);
     }
 });
