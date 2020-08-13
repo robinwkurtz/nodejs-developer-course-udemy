@@ -9,14 +9,11 @@ const userRouter = require('./routes/user');
 const taskRouter = require('./routes/task');
 
 const app = express();
-const port = process.env.PORT || 3000;
-
-// "Env variables"
-const MAINTENANCE_MODE = false;
+const port = process.env.PORT;
 
 // Maintenance mode
 app.use((req, res, next) => {
-    if (MAINTENANCE_MODE) {
+    if (process.env.MAINTENANCE_MODE) {
         res.status(503).send('Under maintenance...');
     } else {
         next();
